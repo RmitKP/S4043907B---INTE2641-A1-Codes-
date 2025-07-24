@@ -1,0 +1,40 @@
+// Q3 Digital Signature
+
+const { generateKeyPairSync, createSign, createVerify } = require('crypto');
+const readline = require('readline');
+
+// Setup readline interface for user input
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+// Generate an RSA key pair (2048-bit)
+const { privateKey, publicKey } = generateKeyPairSync('rsa', {
+  modulusLength: 2048,
+  publicKeyEncoding: { type: 'spki', format: 'pem' }, //public key
+  privateKeyEncoding: { type: 'pkcs1', format: 'pem' } // private key
+});
+console.log("Public Key (PEM):\n", publicKey);
+console.log("Private Key (PEM):\n", privateKey);
+
+// Prompt user for a message
+rl.question("Enter a message to digitally sign: ", (message) => {
+  console.log("Original message:", message);
+
+  // Sign the message using SHA-256
+  const signer = createSign('SHA256');
+  signer.update(message); //input message 
+  signer.end(); // finializes hash
+  const signature = signer.sign(privateKey, 'hex'); // sign using private key
+  console.log("Digital Signature (hex):", signature);
+
+  // Verify the signature using the public key
+  const verifier = createVerify('SHA256');
+  verifier.update(message); //input original message
+  verifier.end();
+  const isValid = verifier.verify(publicKey, signature, 'hex'); //check if singnature is valid
+  console.log("Signature valid?", isValid); //true if valid
+
+  rl.close();
+});
